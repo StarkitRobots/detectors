@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-with_ros = False
+with_ros = True
 basketball = True
 obstacles = True
 import image_processing
@@ -237,7 +237,7 @@ class Detector:
         
         for filter in data ["filters"]:
             filter_name = filter ["name"]
-
+            print(filter_name)
             if (filter_name == "inrange"):
                 low_th   = (int (filter ["l1"]), int (filter ["l2"]), int (filter ["l3"]))
                 high_th  = (int (filter ["h1"]), int (filter ["h2"]), int (filter ["h3"]))
@@ -347,10 +347,10 @@ class Detector:
             self.tennis_ball.publish(basketB_msg) #hardcode before norm filters
             self.basket_top.publish(basketT_msg)
             self.basket_bottom.publish(basketB_msg)
-            #stages = detector.get_stages ()
+            stages = detector.get_stages ()
 
-            #for i in range (2):
-            #    cv2.imshow (str (i), stages[i])
+            for i in range (len(stages)):
+                cv2.imshow (str (i), stages[i])
 
         def callback_obstacles(self, image_msg):
                     # Now we can tune json parametrs while it running
@@ -383,7 +383,7 @@ class Detector:
 
                     #draw circle on the frame
                     result = cv2.circle (frame.copy (), (int(x_b), int(y_b)), 5, (120, 150, 190), thickness = -1)
-                    print(frame.shape)
+                    #print(frame.shape)
                     cv2.waitKey(2)
 
                     cv2.imshow ("frame", result)
@@ -398,10 +398,10 @@ class Detector:
                     self.basket_bottom.publish(basketB_msg)
                     self.obstacles.publish(tuple([basketB_msg, basketT_msg]))
 
-                    #stages = detector.get_stages ()
+                    stages = detector.get_stages ()
 
-                    #for i in range (2):
-                    #    cv2.imshow (str (i), stages[i])
+                    for i in range (len(stages)):
+                        cv2.imshow (str (i), stages[i])
 	
 if __name__ == "__main__":
     rospy.init_node('detectors')

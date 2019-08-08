@@ -116,6 +116,8 @@ def find_max_bounding_box (mask):
     width  = stats [max_label, cv2.CC_STAT_WIDTH]
     height = stats [max_label, cv2.CC_STAT_HEIGHT]
     
+    #print ("max area", max_area)
+
     return ((left, top), (left + width, top + height)), success
 
 #Connected components filtering
@@ -140,15 +142,14 @@ def filter_connected_components (mask, area_low = -1, area_high = -1, hei_low = 
 
     #print (sz)
 
-    for label_num in range (0, sz - 1):
+    for label_num in range (0, sz):
         #print (label_num)
 
         area   = stats [label_num, cv2.CC_STAT_AREA]
         height = stats [label_num, cv2.CC_STAT_HEIGHT]
         width  = stats [label_num, cv2.CC_STAT_WIDTH]
-    
         density = float (area) / (height * width)
-
+        #print(area)
         if (_in_range (area, area_low, area_high)  == False or
             _in_range (height, hei_low, hei_high)  == False or
             _in_range (width, wid_low, wid_high)   == False or
