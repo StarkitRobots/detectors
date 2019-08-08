@@ -13,6 +13,8 @@ import json
 #      types number obtainment
 #TODO: Move code to standard Python style
 #TODO: Add morphological filters, blurring filter
+#TODO: Refactor Detector, particularly multi-object part
+#TODO: Implement IO library with picture, video, camera, ROS input handling
 
 #------------------------------------------------------------------------------------
 
@@ -30,7 +32,6 @@ if with_ros:
     from cv_bridge import CvBridge, CvBridgeError
     import cv2
     import numpy as np
-
 
 #Filter is an img-to-img transformation; generally from any shape to any shape
 #Previous comment was written in the very beginning of the development
