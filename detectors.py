@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-with_ros = True
+with_ros = False
 basketball = True
 obstacles = True
 import image_processing
@@ -207,8 +207,9 @@ class find_obstacles_distances (Filter):
 #be set as a sequence of filters. The idea is obviously taken from NNs
 
 class Detector:
-    filters = []
-    
+    #filters = []
+    detectors = {}
+
     #processing stages (for debugging purposes)
     stages  = []
 
@@ -235,68 +236,74 @@ class Detector:
         with open (detector_filename) as f:
             data = json.load(f)
         
-        for filter in data ["filters"]:
-            filter_name = filter ["name"]
-            print(filter_name)
-            if (filter_name == "inrange"):
-                low_th   = (int (filter ["l1"]), int (filter ["l2"]), int (filter ["l3"]))
-                high_th  = (int (filter ["h1"]), int (filter ["h2"]), int (filter ["h3"]))
-                new_filter = inrange (low_th, high_th)
+        for detector in data ["detectors"]:
+            detector_name = detector ["name"]
 
-            if (filter_name == "max_area_cc_bbox"):
-                new_filter = max_area_cc_bbox ()
+            self.detectors.update ({detector_name : []})
 
-            if (filter_name == "bottom_bbox_point"):
-                new_filter = bottom_bbox_point ()
+            for filter in detector ["filters"]:
+                filter_name = filter ["name"]
+                print(filter_name)
 
-            if (filter_name == "filter_connected_components"):
-                area_low  = int (filter ["area_low"])
-                area_high = int (filter ["area_high"])
-                hei_low   = int (filter ["hei_low"])
-                hei_high  = int (filter ["hei_high"])
-                wid_low   = int (filter ["wid_low"])
-                wid_high  = int (filter ["wid_high"])
-                den_low   = int (filter ["den_low"])
-                den_high  = int (filter ["den_high"])
+                if (filter_name == "inrange"):
+                    low_th   = (int (filter ["l1"]), int (filter ["l2"]), int (filter ["l3"]))
+                    high_th  = (int (filter ["h1"]), int (filter ["h2"]), int (filter ["h3"]))
+                    new_filter = inrange (low_th, high_th)
 
-                new_filter = filter_connected_components (area_low, area_high,
-                             hei_low, hei_high, wid_low, wid_high, den_low, den_high)
+                if (filter_name == "max_area_cc_bbox"):
+                    new_filter = max_area_cc_bbox ()
 
-            if (filter_name == "find_obstacles_distances"):
-                types_num = int (filter ["types_num"])
+                if (filter_name == "bottom_bbox_point"):
+                    new_filter = bottom_bbox_point ()
+
+                if (filter_name == "filter_connected_components"):
+                    area_low  = int (filter ["area_low"])
+                    area_high = int (filter ["area_high"])
+                    hei_low   = int (filter ["hei_low"])
+                    hei_high  = int (filter ["hei_high"])
+                    wid_low   = int (filter ["wid_low"])
+                    wid_high  = int (filter ["wid_high"])
+                    den_low   = int (filter ["den_low"])
+                    den_high  = int (filter ["den_high"])
+
+                    new_filter = filter_connected_components (area_low, area_high,
+                                 hei_low, hei_high, wid_low, wid_high, den_low, den_high)
+
+                if (filter_name == "find_obstacles_distances"):
+                    types_num = int (filter ["types_num"])
                 
-                ranges = []
+                    ranges = []
 
-                for i in range (types_num):
-                    type_num = str (i + 1)
+                    for i in range (types_num):
+                        type_num = str (i + 1)
 
-                    low_th   = (int (filter [type_num + "l1"]),
-                                int (filter [type_num + "l2"]),
-                                int (filter [type_num + "l3"]))
+                        low_th   = (int (filter [type_num + "l1"]),
+                                    int (filter [type_num + "l2"]),
+                                    int (filter [type_num + "l3"]))
 
-                    high_th  = (int (filter [type_num + "h1"]),
-                                int (filter [type_num + "h2"]),
-                                int (filter [type_num + "h3"]))
+                        high_th  = (int (filter [type_num + "h1"]),
+                                    int (filter [type_num + "h2"]),
+                                    int (filter [type_num + "h3"]))
 
-                    ranges.append ((low_th, high_th))
+                        ranges.append ((low_th, high_th))
                 
-                new_filter = find_obstacles_distances (ranges)
+                    new_filter = find_obstacles_distances (ranges)
 
-            self.add_filter (new_filter, filter ["name"])
+                self.add_filter (new_filter, detector_name, filter_name)
         
-    def add_filter (self, new_filter, filter_name):
-        self.filters.append ((new_filter, filter_name))
+    def add_filter (self, new_filter, detector_name, filter_name):
+        self.detectors [detector_name].append ((new_filter, filter_name))
     
     def get_stages (self):
         return self.stages
 
-    def detect(self, image):
+    def detect(self, image, detector_name):
         self.stages = []
         self.stages.append (image)
 
         success = True
 
-        for filter, name in self.filters:
+        for filter, name in self.detectors [detector_name]:
             curr_state = filter.apply (self.stages [-1])
             self.stages.append (curr_state)
 
