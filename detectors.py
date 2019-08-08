@@ -38,6 +38,7 @@ class inrange (Filter):
         self.high_th = high_th_
 
     def apply (self, img):
+        print(img.shape)
         return cv2.inRange (img, self.low_th, self.high_th)
 
 #find bbox of the connected component with maximal area
@@ -112,7 +113,7 @@ class find_obstacles_distances (Filter):
             mask = self.inrange_filter.apply (img)
             mask = self.cc_filter.apply (mask, 10)
 
-            cv2.imshow ("blyad", mask)
+            #cv2.imshow ("blyad", mask)
 
             op_ker = 12
             cl_ker = 12
@@ -191,13 +192,9 @@ class Detector:
         
         for filter in data ["filters"]:
             filter_name = filter ["name"]
-
             if (filter_name == "inrange"):
                 low_th   = (int (filter ["l1"]), int (filter ["l2"]), int (filter ["l3"]))
                 high_th  = (int (filter ["h1"]), int (filter ["h2"]), int (filter ["h3"]))
-
-                #print (low_th)
-
                 new_filter = inrange (low_th, high_th)
 
             if (filter_name == "max_area_cc_bbox"):
@@ -227,10 +224,7 @@ class Detector:
                 new_filter = find_obstacles_distances (ranges)
 
             self.add_filter (new_filter, filter ["name"])
-    
-
-            self.add_filter (new_filter, filter ["name"])
-    
+        
     def add_filter (self, new_filter, filter_name):
         self.filters.append ((new_filter, filter_name))
     
@@ -254,11 +248,12 @@ class Detector:
                 frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
             except CvBridgeError as e:
                 print(e)
-	        #print(frame.shape)
 	        #cv2.imshow ("frame", frame)
             #top left, bottom right
-            bbox_tl, bbox_br = detector.detect(frame)
-            #print(bbox_tl, bbox_br)
+            bbox, succes = detector.detect(frame)
+            bbox_tl, bbox_br = bbox[0], bbox[1]
+            print(bbox_tl, bbox_br)
+            print(succes)
             #calc basket top and bottom
             x_b = (bbox_br[0] + bbox_tl[0])/2
             y_b = bbox_br[1]
@@ -281,10 +276,11 @@ class Detector:
             img_msg.data = np.array(cv2.imencode('.jpg', result)[1]).tostring()
          #  # Publish new image
             self.basketball_img.publish(img_msg)
-
+	    
             basketT_msg = Point(float(x_t), float(y_t), float(0))
             basketB_msg = Point(float(x_b), float(y_b), float(0))
-            self.basket_top.publish(basketT_msg)
+            self.tennis_ball.publish(basketB_msg) #hardcode before norm filters
+	    self.basket_top.publish(basketT_msg)
             self.basket_bottom.publish(basketB_msg)
             #stages = detector.get_stages ()
 
@@ -328,12 +324,9 @@ class Detector:
                     cv2.imshow ("frame", result)
                     #print (x, y)
 
-                    img_msg = CompressedImage()
-                    img_msg.header.stamp = rospy.Time.now()
-                    img_msg.format = "jpeg"
-                    img_msg.data = np.array(cv2.imencode('.jpg', result)[1]).tostring()
+                    msg = self._cv_bridge.cv2_to_imgmsg(frame)
                 #  # Publish new image
-                    self.obstacle_img.publish(img_msg)
+                    self.obstacle_img.publish(msg)
                     basketT_msg = Point(float(x_t), float(y_t), float(0))
                     basketB_msg = Point(float(x_b), float(y_b), float(0))
                     self.basket_top.publish(basketT_msg)
@@ -348,5 +341,6 @@ class Detector:
 if __name__ == "__main__":
     rospy.init_node('detectors')
     conf_file = rospy.get_param('~conf_file')
+    print(conf_file)
     detector = Detector(conf_file)
     rospy.spin()

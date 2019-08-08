@@ -1,0 +1,19 @@
+
+{   "competition" : "basketball",
+    "filters": [
+        {
+            "name": "inrange",
+            "long_name": "in range",
+            "l1": "64",
+            "l2": "21",
+            "l3": "120",
+            "h1": "100",
+            "h2": "126",
+            "h3": "255"
+        },
+        {
+            "name": "max_area_cc_bbox",
+            "long_name": "maximal area connected component bounding box extraction"
+        }
+    ]
+}

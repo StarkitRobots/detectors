@@ -1,0 +1,7 @@
+<launch>
+    <!-- Sprint launch file -->
+    <node pkg="detectors" type="detectors.py" name="ranges"  output="screen">
+    <param name="conf_file" value="/home/rhoban/catkin_ws/src/detectors/tennis_ball.json" />
+
+    </node>
+</launch>

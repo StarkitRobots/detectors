@@ -1,0 +1,5 @@
+<launch>
+    <!-- Sprint launch file -->
+    <node pkg="detectors" type="ranges.py" name="ranges"  output="screen">
+    </node>
+</launch>

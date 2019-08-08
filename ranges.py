@@ -9,28 +9,11 @@ from image_processing import to_three
 def nothing (x):
     pass
 
-cv2.namedWindow ('Colorbars')
 
-cv2.createTrackbar ("l1", "Colorbars",   0, 255, nothing)
-cv2.createTrackbar ("h1", "Colorbars", 255, 255, nothing)
-cv2.createTrackbar ("l2", "Colorbars",   0, 255, nothing)
-cv2.createTrackbar ("h2", "Colorbars", 255, 255, nothing)
-cv2.createTrackbar ("l3", "Colorbars",   0, 255, nothing)
-cv2.createTrackbar ("h3", "Colorbars", 255, 255, nothing)
-
-pict_path = 'images/basket/3.jpg'
-
-if (len(sys.argv) == 2):
-    pict_path = sys.argv [1]
-
-img = cv2.imread (pict_path)
-
-low_th  = (57, 150, 110)
-high_th = (67, 160, 120)
-
-inrange_filter = inrange (low_th, high_th)
-
-while(1):
+def callback(image_msg):
+    frame = self._cv_bridge.imgmsg_to_cv2(image_msg, desired_encoding="passthrough")
+    frame = cv2.cvtColor(frame, cv2.COLOR_YCrCb2RGB)
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
     l1 = cv2.getTrackbarPos ("l1", "Colorbars")
     h1 = cv2.getTrackbarPos ("h1", "Colorbars")
     l2 = cv2.getTrackbarPos ("l2", "Colorbars")
@@ -43,9 +26,9 @@ while(1):
 
     inrange_filter.set_ths (low_th, high_th)
 
-    mask = inrange_filter.apply (img)
+    mask = inrange_filter.apply (frame)
 
-    enlighted = img.copy ()
+    enlighted = frame.copy ()
     enlighted [:, :, 0] = np.array (np.add (enlighted [:, :, 0], np.multiply (mask, 0.5)), dtype = np.uint8)
 
     #cv2.imshow ("enlighted", enlighted)
@@ -60,4 +43,23 @@ while(1):
     if (cv2.waitKey(1) & 0xFF == 27):
         break
 
+
+cv2.namedWindow ('Colorbars')
+
+cv2.createTrackbar ("l1", "Colorbars",   0, 255, nothing)
+cv2.createTrackbar ("h1", "Colorbars", 255, 255, nothing)
+cv2.createTrackbar ("l2", "Colorbars",   0, 255, nothing)
+cv2.createTrackbar ("h2", "Colorbars", 255, 255, nothing)
+cv2.createTrackbar ("l3", "Colorbars",   0, 255, nothing)
+cv2.createTrackbar ("h3", "Colorbars", 255, 255, nothing)
+
+sub = rospy.Subscriber('/camera/image_raw_rhoban', Image, callback, queue_size=1)
+
+
+low_th  = (57, 150, 110)
+high_th = (67, 160, 120)
+
+inrange_filter = inrange (low_th, high_th)
+rospy.init_node('ranges')
+rospy.spin()
 cv2.destroyAllWindows()
