@@ -1,10 +1,26 @@
 #!/usr/bin/env python
-with_ros = True
+with_ros = False
 basketball = True
 obstacles = True
 import image_processing
 import cv2
 import json
+
+#TODO: Move parameters parsing into the filters constructors from Detector constructor
+#TODO: Implement simultaneous stages displaying in single window
+#TODO: Document the logics behind the project architecture, filters creation
+#TODO: Refactor parameters extraction in find_obstacles_distances creation, automate
+#      types number obtainment
+#TODO: Move code to standard Python style
+#TODO: Add morphological filters, blurring filter
+
+#------------------------------------------------------------------------------------
+
+#TODO_FUTURE: Make up a way to plug filters in another filters.
+#             Closest obstacle finder uses inrange, morphology, connected components filtering,
+#             iterating
+
+#TODO_FUTURE: Filter can store its parameters in a dictionary
 
 if with_ros:
     import rospy
@@ -17,10 +33,13 @@ if with_ros:
 
 
 #Filter is an img-to-img transformation; generally from any shape to any shape
+#Previous comment was written in the very beginning of the development
+#Filter is an anything-to-anything transformation
 
 class Filter:
     def __init__(self, name_):
         self.name = name_
+        self.success = []
     
     def apply (self, img):
         return img
@@ -34,25 +53,33 @@ class Filter:
 
 class inrange (Filter):
     def __init__ (self, low_th_, high_th_):
+        Filter.__init__ (self, "inrange")
+
+        self.set_ths (low_th_, high_th_)
+        
+    def set_ths (self, low_th_, high_th_):
         self.low_th  = low_th_
         self.high_th = high_th_
 
     def apply (self, img):
-        print(img.shape)
+        #print(img.shape)
         return cv2.inRange (img, self.low_th, self.high_th)
 
 #find bbox of the connected component with maximal area
 class max_area_cc_bbox (Filter):
     def __init__ (self):
-        pass
+        Filter.__init__ (self, "max_area_cc_bbox")
 
     def apply (self, img):
-        return image_processing.find_max_bounding_box (img)
+        result, success_curr = image_processing.find_max_bounding_box (img)
+
+        self.success.append (success_curr)
+        return result
 
 #returns bottom point of the bbox, middle by x axis
 class bottom_bbox_point (Filter):
     def __init__ (self):
-        pass
+        Filter.__init__ (self, "bottob_bbox_point")
 
     def apply (self, img):
         tl, br = img
@@ -62,6 +89,29 @@ class bottom_bbox_point (Filter):
 
         return (x, y)
 
+#should simply incapsulate basic processing function
+class filter_connected_components (Filter):
+    def __init__ (self, area_low_ = -1, area_high_ = -1, hei_low_ = -1, hei_high_ = -1,
+               wid_low_ = -1, wid_high_ = -1, den_low_ = -1, den_high_ = -1):
+        Filter.__init__ (self, "filter_connected_components")
+
+        self.area_low  = area_low_
+        self.area_high = area_high_
+        self.hei_low   = hei_low_
+        self.hei_high  = hei_high_
+        self.wid_low   = wid_low_
+        self.wid_high  = wid_high_
+        self.den_low   = den_low_
+        self.den_high  = den_high_
+
+    def apply (self, img): #, area_low = -1, area_high = -1, hei_low = -1, hei_high = -1,
+               #wid_low = -1, wid_high = -1, den_low = -1, den_high = -1):
+        return image_processing.filter_connected_components (img, self.area_low,
+               self.area_high, self.hei_low, self.hei_high, self.wid_low,
+               self.wid_high, self.den_low, self.den_high)
+
+#finds pixel distance (by y axis) from the bottom of the frame to the closest obstacle
+#returns list of points (x, y, obstacle type)
 class find_obstacles_distances (Filter):
     def __init__ (self, ranges_):
         Filter.__init__ (self, "find_obstacles_distances")
@@ -182,16 +232,12 @@ class Detector:
                 self.obstacles = rospy.Publisher('detectors/obstacles', Polygon, queue_size=1)
                 self.obstacle_img = rospy.Publisher('detectors/resulted_img', CompressedImage, queue_size=1)
 
-
-
-           
-            
-	
         with open (detector_filename) as f:
             data = json.load(f)
         
         for filter in data ["filters"]:
             filter_name = filter ["name"]
+
             if (filter_name == "inrange"):
                 low_th   = (int (filter ["l1"]), int (filter ["l2"]), int (filter ["l3"]))
                 high_th  = (int (filter ["h1"]), int (filter ["h2"]), int (filter ["h3"]))
@@ -202,6 +248,19 @@ class Detector:
 
             if (filter_name == "bottom_bbox_point"):
                 new_filter = bottom_bbox_point ()
+
+            if (filter_name == "filter_connected_components"):
+                area_low  = int (filter ["area_low"])
+                area_high = int (filter ["area_high"])
+                hei_low   = int (filter ["hei_low"])
+                hei_high  = int (filter ["hei_high"])
+                wid_low   = int (filter ["wid_low"])
+                wid_high  = int (filter ["wid_high"])
+                den_low   = int (filter ["den_low"])
+                den_high  = int (filter ["den_high"])
+
+                new_filter = filter_connected_components (area_low, area_high,
+                             hei_low, hei_high, wid_low, wid_high, den_low, den_high)
 
             if (filter_name == "find_obstacles_distances"):
                 types_num = int (filter ["types_num"])
@@ -234,12 +293,18 @@ class Detector:
     def detect(self, image):
         self.stages = []
         self.stages.append (image)
-	
+
+        success = True
+
         for filter, name in self.filters:
             curr_state = filter.apply (self.stages [-1])
             self.stages.append (curr_state)
 
-        return self.stages [-1]
+            if (len (filter.success) != 0 and filter.success [-1] == False):
+                success = False
+
+        return self.stages [-1], success
+
     if with_ros:
         def callback_basketball(self, image_msg):
             try:
@@ -280,7 +345,7 @@ class Detector:
             basketT_msg = Point(float(x_t), float(y_t), float(0))
             basketB_msg = Point(float(x_b), float(y_b), float(0))
             self.tennis_ball.publish(basketB_msg) #hardcode before norm filters
-	    self.basket_top.publish(basketT_msg)
+            self.basket_top.publish(basketT_msg)
             self.basket_bottom.publish(basketB_msg)
             #stages = detector.get_stages ()
 

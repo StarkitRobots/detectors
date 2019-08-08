@@ -65,14 +65,12 @@ def main ():
         cv2.waitKey (1)    
 	
 	#top left, bottom right
-        #bbox_tl, bbox_br = detector.detect (frame)
+        (bbox_tl, bbox_br), success = detector.detect (frame)
 	#draw bbox on the frame
-        #result = cv2.rectangle (frame.copy (), bbox_tl, bbox_br, (255, 0, 0), 5)
+        result = cv2.rectangle (frame.copy (), bbox_tl, bbox_br, (255, 0, 0), 5)
 
         #bottom point coordinates
-        (x, y), success = detector.detect (frame)
-
-        #print (success)
+        #(x, y), success = detector.detect (frame)
 
         result = frame.copy ()
 
@@ -81,7 +79,9 @@ def main ():
         #draw circle on the frame
         if (success == True):
             print ("detected")
-            result = cv2.circle (result, (x, y), 5, (120, 150, 190), thickness = -1)
+            
+            #result = cv2.circle (result, (x, y), 5, (120, 150, 190), thickness = -1)
+            result = cv2.rectangle (frame.copy (), bbox_tl, bbox_br, (255, 0, 0), 5)
 
         else:
             print ("not detected")
