@@ -6,23 +6,28 @@ import image_processing
 import cv2
 import json
 
-#TODO: Move parameters parsing into the filters constructors from Detector constructor
 #TODO: Implement simultaneous stages displaying in single window
 #TODO: Document the logics behind the project architecture, filters creation
-#TODO: Refactor parameters extraction in find_obstacles_distances creation, automate
-#      types number obtainment
-#TODO: Move code to standard Python style
 #TODO: Add morphological filters, blurring filter
-#TODO: Refactor Detector, particularly multi-object part
-#TODO: Implement IO library with picture, video, camera, ROS input handling
+#TODO: Implement any-to-any colorspace transform filter
 
-#------------------------------------------------------------------------------------
+#TODO/REFACTOR
+#Move parameters parsing into the filters constructors from Detector constructor
+#Refactor parameters extraction in find_obstacles_distances creation, automate
+#      types number obtainment
+#Move code to standard Python style
+#Move filters to a separate file
+#Move image processing (if any) from detectors.py to image_processing.py
+#Adopt tests to new Detector usage (with multiple objects)
+#Refactor Detector, particularly multi-object part
 
-#TODO_FUTURE: Make up a way to plug filters in another filters.
+#TODO/FUTURE
+#Make up a way to plug filters in another filters.
 #             Closest obstacle finder uses inrange, morphology, connected components filtering,
 #             iterating
-
-#TODO_FUTURE: Filter can store its parameters in a dictionary
+#Filter can store its parameters in a dictionary
+#Implement IO library with picture, video, camera, ROS input handling
+#Online vizualizing tool for filters
 
 if with_ros:
     import rospy
@@ -120,23 +125,6 @@ class find_obstacles_distances (Filter):
         self.inrange_filter = inrange ((0, 0, 0), (255, 255, 255))
         self.cc_filter = filter_connected_components ()
 
-    #def get_obstacles(img):
-    #    smart_gray = 0.5 * img[:,:,2] + 0.5 * img[:,:,1]
-    #    converted = cv2.cvtColor(img, cv2.COLOR_RGB2HSV)
-    #
-    #    # white color mask
-    #    lower = np.uint8([100, 100, 100])
-    #    upper = np.uint8([120, 200, 200])
-    #    binarized = cv2.inRange(converted, lower, upper)
-    #
-    #    op_ker = 12
-    #    cl_ker = 12
-    #    morph = binarized.astype('uint8')
-    #    morph = cv2.morphologyEx(binarized, cv2.MORPH_OPEN, np.ones((op_ker, op_ker),np.uint8))
-    #    morph = cv2.morphologyEx(morph, cv2.MORPH_CLOSE, np.ones((cl_ker,cl_ker),np.uint8))
-    #
-    #    return morph
-
     def _get_obstacles_dists (self, obstacles):
         obstacles_flipped = cv2.flip (obstacles, 0)
         distances = np.argmax (obstacles_flipped, axis=0)
@@ -205,7 +193,7 @@ class find_obstacles_distances (Filter):
 #to certain stage and consequent extraction of the required object
 
 #Any detector (color-based, NN, template-based) is supposed to
-#be set as a sequence of filters. The idea is obviously taken from NNs
+#be set as a sequence of filters. The idea is partially stolen from NNs
 
 class Detector:
     #filters = []
