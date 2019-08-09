@@ -10,6 +10,7 @@ import json
 #TODO: Document the logics behind the project architecture, filters creation
 #TODO: Add morphological filters, blurring filter
 #TODO: Implement any-to-any colorspace transform filter
+#TODO: Fix issues arised because of the folder reorganization
 
 #TODO/REFACTOR
 #Move parameters parsing into the filters constructors from Detector constructor
@@ -28,6 +29,8 @@ import json
 #Filter can store its parameters in a dictionary
 #Implement IO library with picture, video, camera, ROS input handling
 #Online vizualizing tool for filters
+#Metaconfig with a list of configs
+#Tuning of Inrange (ranges.py) to .json
 
 if with_ros:
     import rospy
