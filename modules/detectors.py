@@ -10,7 +10,7 @@ import json
 #TODO: Document the logics behind the project architecture, filters creation
 #TODO: Add morphological filters, blurring filter
 #TODO: Implement any-to-any colorspace transform filter
-#TODO: Fix issues arised because of the folder reorganization
+#TODO: Fix issues arized because of the folder reorganization
 
 #TODO/REFACTOR
 #Move parameters parsing into the filters constructors from Detector constructor
@@ -53,12 +53,65 @@ class Filter:
     def apply (self, img):
         return img
 
-#class tograyscale (Filter):
-#    def __init__ (self):
-#        pass
-#
-#    def apply (self, img):
-#        return cv2.cvtColor (img, cv2.COLOR_BGR2GRAY)
+class tograyscale (Filter):
+    def __init__ (self):
+        pass
+
+    def apply (self, img):
+        return cv2.cvtColor (img, cv2.COLOR_BGR2GRAY)
+
+class morphology (Filter):
+    operations = {}
+
+    def __init__ (self, operation_, ker_sz_ = 3):
+        Filter.__init__ (self, "morphology")
+
+        self.ker_sz    = ker_sz_
+        self.operation = operation_
+
+        self.operations.update ({"erode"  : cv2.MORPH_ERODE})
+        self.operations.update ({"dilate" : cv2.MORPH_DILATE})
+        self.operations.update ({"open"   : cv2.MORPH_OPEN})
+        self.operations.update ({"close"  : cv2.MORPH_CLOSE})
+        
+    def apply (self, img):
+        kernel = np.ones ((self.ker_sz, self.ker_sz), np.uint8)
+        return cv2.morphologyEx (img, self.operations [self.operation], kernel)
+
+class GaussianBlur (Filter):
+    def __init__ (self, ker_sz_ = 3):
+        Filter.__init__ (self, "Gaussian Blur")
+
+        self.ker_sz = ker_sz
+        
+    def apply (self, img):
+        return cv2.GaussianBlur (img, (ker_sz, kre_sz), 0)
+
+class colorspace_to_colorspace (Filter):
+    transforms = {}
+
+    def __init__ (self, from_, to_):
+        Filter.__init__ (self, "colorspace2colorspace")
+
+        self.from = from_
+        self.to   = to_
+
+        self.transforms.update ({"RGB2BGR"  : cv2.COLOR_RGB2BGR})
+        
+        self.transforms.update ({"RGB2GRAY" : cv2.COLOR_RGB2GRAY})
+        self.transforms.update ({"GRAY2RGB" : cv2.COLOR_GRAY2RGB})
+        
+        self.transforms.update ({"RGB2HSV"  : cv2.COLOR_RGB2HSV})
+        self.transforms.update ({"HSV2RGB"  : cv2.COLOR_HSV2RGB})
+        
+        self.transforms.update ({"RGB2YCrCb"  : cv2.COLOR_RGB2YCrCb})
+        self.transforms.update ({"YCrCb2RGB"  : cv2.COLOR_YCrCb2RGB})
+        
+        self.transforms.update ({"HSV2YCrCb"  : cv2.COLOR_HSV2YCrCb})
+        self.transforms.update ({"YCrCb2HSV"  : cv2.COLOR_YCrCb2HSV})
+        
+    def apply (self, img):
+        return cv2.cvtColor (img, self.transforms [self.from + "2" + self.to])
 
 class inrange (Filter):
     def __init__ (self, low_th_, high_th_):
@@ -71,7 +124,6 @@ class inrange (Filter):
         self.high_th = high_th_
 
     def apply (self, img):
-        #print(img.shape)
         return cv2.inRange (img, self.low_th, self.high_th)
 
 #find bbox of the connected component with maximal area
@@ -154,8 +206,6 @@ class find_obstacles_distances (Filter):
             self.inrange_filter.set_ths (range_ [0], range_ [1])
             mask = self.inrange_filter.apply (img)
             mask = self.cc_filter.apply (mask, 10)
-
-            #cv2.imshow ("blyad", mask)
 
             op_ker = 12
             cl_ker = 12
