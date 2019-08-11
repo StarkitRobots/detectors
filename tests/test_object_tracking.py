@@ -5,11 +5,11 @@ import os
 import math
 
 #TODO: implement class, incapsulating input source
-#possible inputs: video, camera, photo
+#possible inputs: video, camera, photo, ROS (Volodya sexflexx)
 
 CAMERA = 0
 VIDEO  = 1
-PHOTO  = 2
+PHOTO  = 2 
 
 video_path = ""
 video_file = ""

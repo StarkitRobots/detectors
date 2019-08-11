@@ -31,6 +31,7 @@ import json
 #Online vizualizing tool for filters
 #Metaconfig with a list of configs
 #Tuning of Inrange (ranges.py) to .json
+#Different verbosity levels logging system
 
 if with_ros:
     import rospy
@@ -93,8 +94,8 @@ class colorspace_to_colorspace (Filter):
     def __init__ (self, from_, to_):
         Filter.__init__ (self, "colorspace2colorspace")
 
-        self.from = from_
-        self.to   = to_
+        self.source_colorspace = from_
+        self.target_colorspace = to_
 
         self.transforms.update ({"RGB2BGR"  : cv2.COLOR_RGB2BGR})
         
@@ -111,7 +112,8 @@ class colorspace_to_colorspace (Filter):
         self.transforms.update ({"YCrCb2HSV"  : cv2.COLOR_YCrCb2HSV})
         
     def apply (self, img):
-        return cv2.cvtColor (img, self.transforms [self.from + "2" + self.to])
+        return cv2.cvtColor (img, self.transforms [self.source_colorspace +
+                             "2" + self.target_colorspace])
 
 class inrange (Filter):
     def __init__ (self, low_th_, high_th_):
@@ -253,7 +255,7 @@ class Detector:
     detectors = {}
 
     #processing stages (for debugging purposes)
-    stages  = []
+    stages  = {}
 
     def __init__(self):
         pass
@@ -336,23 +338,47 @@ class Detector:
     def add_filter (self, new_filter, detector_name, filter_name):
         self.detectors [detector_name].append ((new_filter, filter_name))
     
-    def get_stages (self):
-        return self.stages
+    def get_stages (self, detector_name):
+        return self.stages [detector_name]
+
+    def get_stages_picts (self, detector_name):
+        stages_picts = []
+
+        for i in range (len (self.stages [detector_name])):
+            filter_type = self.detectors [detector_name] [i - 1] [1]
+            #print ("fffuuu")
+            #print (self.detectors [detector_name] [i - 1])
+
+            stage = self.stages [detector_name] [i]
+
+            if (i == 0):
+                stages_picts.append (self.stages [detector_name] [i])
+
+            elif (filter_type == "max_area_cc_bbox"):
+                prev_img = self.stages [detector_name] [0].copy ()
+
+                rect_marked = cv2.rectangle (prev_img, stage [0], stage [1], (100, 200, 10), 5)
+                stages_picts.append (rect_marked)
+
+            else:
+                stages_picts.append (stage)
+
+        return stages_picts
 
     def detect(self, image, detector_name):
-        self.stages = []
-        self.stages.append (image)
+        self.stages [detector_name] = []
+        self.stages [detector_name].append (image)
 
         success = True
 
         for filter, name in self.detectors [detector_name]:
-            curr_state = filter.apply (self.stages [-1])
-            self.stages.append (curr_state)
+            curr_state = filter.apply (self.stages [detector_name] [-1])
+            self.stages [detector_name].append (curr_state)
 
             if (len (filter.success) != 0 and filter.success [-1] == False):
                 success = False
 
-        return self.stages [-1], success
+        return self.stages [detector_name] [-1], success
 
     if with_ros:
         def callback_basketball(self, image_msg):

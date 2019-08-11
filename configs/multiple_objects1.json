@@ -1,0 +1,42 @@
+
+{   
+    "competition" : "basketball",
+    
+    "detectors":
+        [
+        {
+        "name": "ball detector",
+        "filters":
+            [
+            {
+            "name": "inrange",
+            "long_name": "in range",
+            "l1": "140",
+            "l2": "55",
+            "l3": "30",
+            "h1": "170",
+            "h2": "70",
+            "h3": "60"
+            },
+
+            {
+            "name": "filter_connected_components",
+            "long_name": "filter connected components",
+            "area_low":  "100",
+            "area_high": "10000",
+            "hei_low":   "-1",
+            "hei_high":  "-1",
+            "wid_low":   "-1",
+            "wid_high":  "-1",
+            "den_low":   "-1",
+            "den_high":  "-1"
+            },
+
+            {
+            "name": "max_area_cc_bbox",
+            "long_name": "maximal area connected component bounding box extraction"
+            }
+            ]
+        }
+        ]
+}
