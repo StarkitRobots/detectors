@@ -30,9 +30,11 @@ def nothing (x):
 
 cv2.namedWindow ('Colorbars')
 
-source = Source ("../images/2019_08_11_08h00m33s/00014.png")
-detector = detectors.Detector ('../configs/multiple_objects1.json')
-#detector = detectors.Detector ('../configs/closest_obstacle.json')
+#source = Source ("../images/2019_08_11_08h00m33s/00014.png")
+source = Source ("../images/00014.png")
+
+#detector = detectors.Detector ('../configs/multiple_objects1.json')
+detector = detectors.Detector ('../configs/closest_obstacle.json')
 
 cv2.createTrackbar ("l1", "Colorbars",   0, 255, nothing)
 cv2.createTrackbar ("h1", "Colorbars", 255, 255, nothing)
@@ -51,16 +53,15 @@ high_th = (67, 160, 120)
 #rospy.spin()
 #cv2.destroyAllWindows()
 
-
 while (True):    
     frame_from_source = source.get_frame ()
 
     #print ("a")
 
-    #detector.detect (frame_from_source, "obstacle detector")
-    #stages = detector.get_stages_picts ("obstacle detector")
-    detector.detect (frame_from_source, "ball detector")
-    stages = detector.get_stages_picts ("ball detector")
+    detector.detect (frame_from_source, "obstacle detector")
+    stages = detector.get_stages_picts ("obstacle detector")
+    #detector.detect (frame_from_source, "ball detector")
+    #stages = detector.get_stages_picts ("ball detector")
 
     for i in range (len (stages)):
         cv2.imshow (str (i), stages [i])

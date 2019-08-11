@@ -55,13 +55,6 @@ class Filter:
     def apply (self, img):
         return img
 
-class tograyscale (Filter):
-    def __init__ (self):
-        pass
-
-    def apply (self, img):
-        return cv2.cvtColor (img, cv2.COLOR_BGR2GRAY)
-
 class morphology (Filter):
     operations = {}
 
@@ -181,7 +174,7 @@ class find_obstacles_distances (Filter):
         Filter.__init__ (self, "find_obstacles_distances")
         self.ranges = ranges_
         self.inrange_filter = inrange ((0, 0, 0), (255, 255, 255))
-        self.cc_filter = filter_connected_components ()
+        #self.cc_filter = filter_connected_components ()
 
     def _get_obstacles_dists (self, obstacles):
         obstacles_flipped = cv2.flip (obstacles, 0)
@@ -196,6 +189,8 @@ class find_obstacles_distances (Filter):
         result = []
         labels = []
 
+        self.obstacles_stages = {}
+
         sh = img.shape
 
         for i in range (sh [1]):
@@ -208,13 +203,19 @@ class find_obstacles_distances (Filter):
 
             self.inrange_filter.set_ths (range_ [0], range_ [1])
             mask = self.inrange_filter.apply (img)
+            self.obstacles_stages.update ({"0" : mask})
+
             mask = self.cc_filter.apply (mask)
+            self.obstacles_stages.update ({"1" : mask})
 
             op_ker = 12
             cl_ker = 12
 
             morph = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((op_ker, op_ker),np.uint8))
+            self.obstacles_stages.update ({"2" : mask})
+
             morph = cv2.morphologyEx(morph, cv2.MORPH_CLOSE, np.ones((cl_ker,cl_ker),np.uint8))
+            self.obstacles_stages.update ({"3" : mask})
 
             temp_result = self._get_obstacles_dists (morph)
 
@@ -223,13 +224,15 @@ class find_obstacles_distances (Filter):
                 result = temp_result.copy ()
 
             for i in range (len (temp_result)):
-                if (temp_result [i] != 0):
-                    temp_result [i] = sh [0] - temp_result [i]
-
-            for i in range (len (temp_result)):
                 if (temp_result [i] <= result [i] and temp_result [i] != 0):
                     result [i] = temp_result [i]
                     labels [i] = range_num + 1
+
+        for i in range (len (result)):
+            if (result [i] != 0):
+                result [i] = sh [0] - temp_result [i]
+                #temp_result [i] = temp_result [i]
+
 
         #for i in range (sh [1]):
         #    result.append ((i, 200, i))
@@ -239,9 +242,6 @@ class find_obstacles_distances (Filter):
 
         return result, labels
 
-
-#should simply incapsulate basic processing function
-#class filter_connected_components
 
 #------------------------------------------------------
 
@@ -260,6 +260,21 @@ class Detector:
 
     def __init__(self):
         pass
+
+    def _init_cc_filter (self, filter):
+        area_low  = int (filter ["area_low"])
+        area_high = int (filter ["area_high"])
+        hei_low   = int (filter ["hei_low"])
+        hei_high  = int (filter ["hei_high"])
+        wid_low   = int (filter ["wid_low"])
+        wid_high  = int (filter ["wid_high"])
+        den_low   = int (filter ["den_low"])
+        den_high  = int (filter ["den_high"])
+
+        cc_filter = filter_connected_components (area_low, area_high,
+                    hei_low, hei_high, wid_low, wid_high, den_low, den_high)
+
+        return cc_filter
 
     def __init__(self, detector_filename):
         with open (detector_filename) as f:
@@ -308,17 +323,7 @@ class Detector:
                     new_filter = colorspace_to_colorspace (source, target)
 
                 if (filter_name == "filter_connected_components"):
-                    area_low  = int (filter ["area_low"])
-                    area_high = int (filter ["area_high"])
-                    hei_low   = int (filter ["hei_low"])
-                    hei_high  = int (filter ["hei_high"])
-                    wid_low   = int (filter ["wid_low"])
-                    wid_high  = int (filter ["wid_high"])
-                    den_low   = int (filter ["den_low"])
-                    den_high  = int (filter ["den_high"])
-
-                    new_filter = filter_connected_components (area_low, area_high,
-                                 hei_low, hei_high, wid_low, wid_high, den_low, den_high)
+                    new_filter = self._init_cc_filter (filter)
 
                 if (filter_name == "find_obstacles_distances"):
                     types_num = int (filter ["types_num"])
@@ -337,8 +342,12 @@ class Detector:
                                     int (filter [type_num + "h3"]))
 
                         ranges.append ((low_th, high_th))
-                
+
+                    new_cc_filter = self._init_cc_filter (filter)
+
                     new_filter = find_obstacles_distances (ranges)
+
+                    new_filter.cc_filter = new_cc_filter
 
                 self.add_filter (new_filter, detector_name, filter_name)
         
@@ -370,6 +379,14 @@ class Detector:
             elif (filter_type == "find_obstacles_distances"):
                 prev_img = self.stages [detector_name] [0].copy ()
 
+                obstacles_stages = self.detectors [detector_name] [i - 1] [0].obstacles_stages
+
+                #print ("lalalaaa")
+                #print (self.detectors [detector_name] [i-1])
+
+                for i in range (len (obstacles_stages)):
+                    stages_picts.append (obstacles_stages [str (i)])
+
                 obstacle_pixels, labels = stage
 
                 for i in range (len (obstacle_pixels)):
@@ -378,7 +395,7 @@ class Detector:
 
                     type = labels [i]
 
-                    rect_marked = cv2.circle (prev_img, (x, y), 5, (170 + type * 50, 50 + type * 150, 190 + type * 210), thickness = -1)
+                    rect_marked = cv2.circle (prev_img, (x, y), 5, (10 + type * 50, 50 + type * 150, 190 + type * 210), thickness = -1)
 
                 stages_picts.append (rect_marked)
 
