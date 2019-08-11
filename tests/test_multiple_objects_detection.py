@@ -1,8 +1,12 @@
-import detectors
+
 import cv2
 import time
 import os
+import sys
 
+sys.path.append("../modules")
+
+import detectors
 #TODO: implement class, incapsulating input source
 #possible inputs: video, camera, photo
 
@@ -13,12 +17,12 @@ PHOTO  = 2
 video_path = ""
 video_file = ""
 
-photo_path = "/Users/elijah/Dropbox/Programming/detectors/images/"
+photo_path = "/home/i/detectors/images/2019_08_11_08h00m33s"
 #photo_file = "basket/2.jpg"
-photo_file = "two_objects.jpg"
+photo_file = "00014.png"
 
-output_path = "/Users/elijah/Dropbox/Programming/RoboCup/nao_cv/geometrical/chessboard_images/"
-
+#output_path = "/Users/elijah/Dropbox/Programming/RoboCup/nao_cv/geometrical/chessboard_images/"
+output_path = ''
 def main ():
     INPUT_SOURCE = PHOTO
 

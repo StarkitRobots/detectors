@@ -14,7 +14,7 @@ import numpy as np
 #from geometry_msgs.msg import Point, Polygon
 #from cv_bridge import CvBridge, CvBridgeError
 
-sys.path.append("/Users/elijah/Dropbox/Programming/detectors/modules/")
+sys.path.append("../modules/")
 
 from input_output import Source
 import detectors
@@ -30,9 +30,9 @@ def nothing (x):
 
 cv2.namedWindow ('Colorbars')
 
-source = Source ("/Users/elijah/Dropbox/Programming/detectors/images/obstacle.jpg")
-
-detector = detectors.Detector ('/Users/elijah/Dropbox/Programming/detectors/configs/multiple_objects1.json')
+source = Source ("../images/2019_08_11_08h00m33s/00014.png")
+detector = detectors.Detector ('../configs/multiple_objects1.json')
+#detector = detectors.Detector ('../configs/closest_obstacle.json')
 
 cv2.createTrackbar ("l1", "Colorbars",   0, 255, nothing)
 cv2.createTrackbar ("h1", "Colorbars", 255, 255, nothing)
@@ -57,6 +57,8 @@ while (True):
 
     #print ("a")
 
+    #detector.detect (frame_from_source, "obstacle detector")
+    #stages = detector.get_stages_picts ("obstacle detector")
     detector.detect (frame_from_source, "ball detector")
     stages = detector.get_stages_picts ("ball detector")
 

@@ -1,0 +1,36 @@
+{
+    "competition" : "keque",
+    "detectors":
+        [
+        {
+        "name" : "obstacle detector",
+        "filters": [
+                {
+                    "name": "colorspace2colorspace",
+                    "long_name": "colorspace2colorspace",
+                    "from" : "YCrCb",
+                    "to"   : "RGB"
+                },
+
+                {
+                    "name": "colorspace2colorspace",
+                    "long_name": "colorspace2colorspace",
+                    "from" : "RGB",
+                    "to"   : "HSV"
+                },
+                {
+                "name": "find_obstacles_distances",
+                "long_name" : "find_obstacles_distances",
+                "types_num" : "1",
+                "1l1" : "108",
+                "1l2" : "140",
+                "1l3" : "71",
+                "1h1" : "124",
+                "1h2" : "210",
+                "1h3" : "208"
+                }
+            
+    ]
+    }
+    ]
+}

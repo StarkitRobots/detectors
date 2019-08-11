@@ -5,6 +5,7 @@ obstacles = True
 import image_processing
 import cv2
 import json
+import numpy as np
 
 #TODO: Implement simultaneous stages displaying in single window
 #TODO: Document the logics behind the project architecture, filters creation
@@ -108,8 +109,8 @@ class colorspace_to_colorspace (Filter):
         self.transforms.update ({"RGB2YCrCb"  : cv2.COLOR_RGB2YCrCb})
         self.transforms.update ({"YCrCb2RGB"  : cv2.COLOR_YCrCb2RGB})
         
-        self.transforms.update ({"HSV2YCrCb"  : cv2.COLOR_HSV2YCrCb})
-        self.transforms.update ({"YCrCb2HSV"  : cv2.COLOR_YCrCb2HSV})
+        #self.transforms.update ({"HSV2YCrCb"  : cv2.COLOR_HSV2YCrCb})
+        #self.transforms.update ({"YCrCb2HSV"  : cv2.COLOR_YCrCb2HSV})
         
     def apply (self, img):
         return cv2.cvtColor (img, self.transforms [self.source_colorspace +
@@ -207,7 +208,7 @@ class find_obstacles_distances (Filter):
 
             self.inrange_filter.set_ths (range_ [0], range_ [1])
             mask = self.inrange_filter.apply (img)
-            mask = self.cc_filter.apply (mask, 10)
+            mask = self.cc_filter.apply (mask)
 
             op_ker = 12
             cl_ker = 12
@@ -300,6 +301,12 @@ class Detector:
                 if (filter_name == "bottom_bbox_point"):
                     new_filter = bottom_bbox_point ()
 
+                if (filter_name == "colorspace2colorspace"):
+                    source = filter ["from"]
+                    target = filter ["to"]
+
+                    new_filter = colorspace_to_colorspace (source, target)
+
                 if (filter_name == "filter_connected_components"):
                     area_low  = int (filter ["area_low"])
                     area_high = int (filter ["area_high"])
@@ -358,6 +365,21 @@ class Detector:
                 prev_img = self.stages [detector_name] [0].copy ()
 
                 rect_marked = cv2.rectangle (prev_img, stage [0], stage [1], (100, 200, 10), 5)
+                stages_picts.append (rect_marked)
+
+            elif (filter_type == "find_obstacles_distances"):
+                prev_img = self.stages [detector_name] [0].copy ()
+
+                obstacle_pixels, labels = stage
+
+                for i in range (len (obstacle_pixels)):
+                    x = i
+                    y = obstacle_pixels [i]
+
+                    type = labels [i]
+
+                    rect_marked = cv2.circle (prev_img, (x, y), 5, (170 + type * 50, 50 + type * 150, 190 + type * 210), thickness = -1)
+
                 stages_picts.append (rect_marked)
 
             else:
