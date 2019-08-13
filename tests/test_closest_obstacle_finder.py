@@ -1,9 +1,12 @@
-import detectors
 import cv2
 import time
 import os
-#import matplotlib.pyplot as plt
- 
+import sys
+
+sys.path.append("/Users/elijah/Dropbox/Programming/detectors/modules/")
+
+import detectors
+
 #TODO: implement class, incapsulating input source
 #possible inputs: video, camera, photo
 
@@ -14,8 +17,8 @@ PHOTO  = 2
 video_path = ""
 video_file = ""
 
-photo_path = "/Users/elijah/Dropbox/Programming/kondo/vision/images/"
-photo_file = "obstacle.jpg"
+photo_path = "/Users/elijah/Dropbox/Programming/detectors/images/"
+photo_file = "two_objects_1.jpg"
 
 output_path = "/Users/elijah/Dropbox/Programming/RoboCup/nao_cv/geometrical/chessboard_images/"
 
@@ -35,7 +38,7 @@ def main ():
     if (INPUT_SOURCE == PHOTO):
         img = cv2.imread (photo_path + photo_file)
 
-    detector = detectors.Detector ('closest_obstacle.txt')
+    detector = detectors.Detector ('/Users/elijah/Dropbox/Programming/detectors/configs/closest_obstacle.json')
     
     while (True):
         #if (INPUT_SOURCE == CAMERA or INPUT_SOURCE == VIDEO):
@@ -49,7 +52,7 @@ def main ():
                 
         cv2.waitKey (1)    
 
-        (obstacle_pixels, labels), _ = detector.detect (frame)
+        (obstacle_pixels, labels), _ = detector.detect (frame, "obstacle detector")
 
         #print ("keke")
         #print (labels)
@@ -76,10 +79,10 @@ def main ():
             #    result = cv2.circle (result, (x, frame.shape [0] - y), 5,
             #        (120 + type * 50, 150 + type * 150, 190 + type * 210), thickness = -1)
 
-        #stages = detector.get_stages ()
+        stages = detector.get_stages_picts ("obstacle detector")
 	
-        #for i in range (2):
-        #    cv2.imshow (str (i), stages [i])
+        for i in range (len (stages)):
+            cv2.imshow (str (i), stages [i])
 
         #processing_stages = detector.stages ()
 	

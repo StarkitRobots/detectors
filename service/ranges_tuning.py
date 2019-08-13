@@ -31,7 +31,8 @@ def nothing (x):
 cv2.namedWindow ('Colorbars')
 
 #source = Source ("../images/2019_08_11_08h00m33s/00014.png")
-source = Source ("../images/00014.png")
+#source = Source ("../images/00014.png")
+source = Source ("../images/obst_bottom.png")
 
 #detector = detectors.Detector ('../configs/multiple_objects1.json')
 detector = detectors.Detector ('../configs/closest_obstacle.json')

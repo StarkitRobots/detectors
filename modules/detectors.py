@@ -9,9 +9,7 @@ import numpy as np
 
 #TODO: Implement simultaneous stages displaying in single window
 #TODO: Document the logics behind the project architecture, filters creation
-#TODO: Add morphological filters, blurring filter
-#TODO: Implement any-to-any colorspace transform filter
-#TODO: Fix issues arized because of the folder reorganization
+#TODO: Fix issues arised because of the folder reorganization
 
 #TODO/REFACTOR
 #Move parameters parsing into the filters constructors from Detector constructor
@@ -30,7 +28,7 @@ import numpy as np
 #Filter can store its parameters in a dictionary
 #Implement IO library with picture, video, camera, ROS input handling
 #Online vizualizing tool for filters
-#Metaconfig with a list of configs
+#Metaconfig with a list of configs (?)
 #Tuning of Inrange (ranges.py) to .json
 #Different verbosity levels logging system
 
@@ -179,6 +177,10 @@ class find_obstacles_distances (Filter):
     def _get_obstacles_dists (self, obstacles):
         obstacles_flipped = cv2.flip (obstacles, 0)
         distances = np.argmax (obstacles_flipped, axis=0)
+	
+        for i in range (len (distances)):
+            if (distances [i] == 0 and obstacles_flipped [distances [i]] [i] == 0):
+                distances [i] = -2
 
         #print ("fuck")
         #print (distances)
@@ -198,6 +200,7 @@ class find_obstacles_distances (Filter):
 
         filled = False
 
+        #save all masks, not last
         for range_num in range (len (self.ranges)):
             range_ = self.ranges [range_num]
 
@@ -224,12 +227,12 @@ class find_obstacles_distances (Filter):
                 result = temp_result.copy ()
 
             for i in range (len (temp_result)):
-                if (temp_result [i] <= result [i] and temp_result [i] != 0):
+                if (temp_result [i] <= result [i] and temp_result [i] != -2):
                     result [i] = temp_result [i]
                     labels [i] = range_num + 1
 
         for i in range (len (result)):
-            if (result [i] != 0):
+            if (result [i] != -2):
                 result [i] = sh [0] - temp_result [i]
                 #temp_result [i] = temp_result [i]
 
