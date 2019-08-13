@@ -15,10 +15,6 @@ def get_available_cameras (upper_bound = 10, lower_bound = 0):
 
 #read dir
 
-#CAMERA = 0
-#VIDEO  = 1
-#PHOTO  = 2
-
 #Incapsulates reading frames from the following types of sources:
 #photo (single image), photos series, video, camera, ROS node (?)
 
