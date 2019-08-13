@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-with_ros = False
+with_ros = True
 basketball = True
 obstacles = True
 import image_processing
@@ -290,7 +290,7 @@ class Detector:
                 self.basketball_img = rospy.Publisher('detectors/resulted_img', CompressedImage, queue_size=1)
             elif competition == "obstacles":
                 self._sub = rospy.Subscriber('/camera/image_raw_rhoban', Image, self.callback_obstacles, queue_size=1)
-                self.obstacles = rospy.Publisher('detectors/obstacles', Polygon, queue_size=1)
+                self.obstacles = rospy.Publisher('detectors/obstacle', Polygon, queue_size=1)
                 self.obstacle_img = rospy.Publisher('detectors/resulted_img', CompressedImage, queue_size=1)
 
         with open (detector_filename) as f:
@@ -423,99 +423,99 @@ class Detector:
         def callback_basketball(self, image_msg):
             try:
                 frame = self._cv_bridge.imgmsg_to_cv2(image_msg, desired_encoding="passthrough")
-                frame = cv2.cvtColor(frame, cv2.COLOR_YCrCb2RGB)
-                frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
             except CvBridgeError as e:
                 print(e)
 	        #cv2.imshow ("frame", frame)
             #top left, bottom right
-            bbox, succes = detector.detect(frame)
+            bbox, succes = detector.detect(frame, "ball detector")
             bbox_tl, bbox_br = bbox[0], bbox[1]
-            print(bbox_tl, bbox_br)
-            print(succes)
+            #print(succes)
+            #stages = detector.get_stages ("obstacle detector")
+            #cv2.imshow ("frame", stages[2])
+
             #calc basket top and bottom
-            x_b = (bbox_br[0] + bbox_tl[0])/2
-            y_b = bbox_br[1]
-            x_t = (bbox_br[0] + bbox_tl[0])/2
-            y_t = bbox_tl[1]
+            if succes:
+                x_b = (bbox_br[0] + bbox_tl[0])/2
+                y_b = bbox_br[1]
 
-            #x, y = detector.detect (frame)
+                result = cv2.circle (frame.copy (), (int(x_b), int(y_b)), 5, (120, 150, 190), thickness = -1)
+                #cv2.waitKey(2)
+                #cv2.imshow ("ball", result)
+                self.tennis_ball.publish(Point(float(x_b), float(y_b), float(0))) #hardcode before norm filters
+            
+            bbox, succes = detector.detect(frame, "basket detector")
+           # stages = detector.get_stages("basket detector")
+           # cv2.imshow("mask", stages[3])
+            if succes:
+                bbox_tl, bbox_br = bbox[0], bbox[1]
+                x_b = (bbox_br[0] + bbox_tl[0])/2
+                y_b = bbox_br[1]
 
-            #draw circle on the frame
-            result = cv2.circle (frame.copy (), (int(x_b), int(y_b)), 5, (120, 150, 190), thickness = -1)
-            print(frame.shape)
-            cv2.waitKey(2)
+                result = cv2.circle (frame.copy (), (int(x_b), int(y_b)), 5, (120, 150, 190), thickness = -1)
+                #cv2.waitKey(2)
+                #cv2.imshow ("basket", result)
+                self.basket_bottom.publish(Point(float(x_b), float(y_b), float(0))) #hardcode before norm filters
+            
 
-            cv2.imshow ("frame", result)
-            #print (x, y)
-
-            img_msg = CompressedImage()
-            img_msg.header.stamp = rospy.Time.now()
-            img_msg.format = "jpeg"
-            img_msg.data = np.array(cv2.imencode('.jpg', result)[1]).tostring()
-         #  # Publish new image
-            self.basketball_img.publish(img_msg)
-	    
-            basketT_msg = Point(float(x_t), float(y_t), float(0))
-            basketB_msg = Point(float(x_b), float(y_b), float(0))
-            self.tennis_ball.publish(basketB_msg) #hardcode before norm filters
-            self.basket_top.publish(basketT_msg)
-            self.basket_bottom.publish(basketB_msg)
-            stages = detector.get_stages ()
-
-            for i in range (len(stages)):
-                cv2.imshow (str (i), stages[i])
-
-        def callback_obstacles(self, image_msg):
-                    # Now we can tune json parametrs while it running
-                    #conf_file = rospy.get_param('~conf_file')
-	                #detector = Detector(conf_file)
-                    try:
-                        frame = self._cv_bridge.imgmsg_to_cv2(image_msg, desired_encoding="passthrough")
-                        frame = cv2.cvtColor(frame, cv2.COLOR_YCrCb2RGB)
-                        frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
-                        
-                    except CvBridgeError as e:
-                        print(e)
-                    #print(frame.shape)
-                    #cv2.imshow ("frame", frame)
-                    #top left, bottom right
-                    bbox_tl, bbox_br = detector.detect (frame)
-                    #print(bbox_tl, bbox_br)
-                    #calc basket top and bottom
-                    x_b = (bbox_br[0] + bbox_tl[0])/2
-                    y_b = bbox_br[1]
-                    x_t = (bbox_br[0] + bbox_tl[0])/2
-                    y_t = bbox_tl[1]
+    def callback_obstacles(self, image_msg):
+                # Now we can tune json parametrs while it running
+                #conf_file = rospy.get_param('~conf_file')
+                #detector = Detector(conf_file)
+                try:
+                    frame = self._cv_bridge.imgmsg_to_cv2(image_msg, desired_encoding="passthrough")
+                    
+                    #frame = cv2.cvtColor(frame, cv2.COLOR_YCrCb2RGB)
+                    # frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+                    
+                except CvBridgeError as e:
+                    print(e)
+                #print(frame.shape)
+                #cv2.imshow ("frame", frame)
+                #top left, bottom right
+                polygon  = []
+                (obstacle_pixels, labels), retv = detector.detect(frame, "obstacle detector")
+                cv2.waitKey(2)
+                result = cv2.cvtColor(frame, cv2.COLOR_YCrCb2BGR)
+                for i, el, label in zip(range(len(labels)), obstacle_pixels, labels):
+                    if label != 0:
+                        polygon.append(Point(float(i), float(el), float(label)))
+                        result = cv2.circle (result, (int(i), int(el)), 5, (120, 150, 190), thickness = -1)
+                cv2.imshow ("frame", result)
+                #print(_)
+                if retv: 
+                    #print(tuple(zip(obstacle_pixels,labels)))
+                
+                #print(bbox_tl, bbox_br)
+                #calc basket top and bottom
                 #draw bbox on the frame
-                    #result = cv2.rectangle (frame.copy (), bbox_tl, bbox_br, (255, 0, 0), 5)
-                    #frame = cv2.cvtColor(frame, cv2.COLOR_YCR_CB2HSV)
-                    #frame  = cv2.cvtColor(frame, cv2.COLOR_YCrCb2RGB)
-                    #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-                    #bottom point coordinates
-                    #x, y = detector.detect (frame)
+                #result = cv2.rectangle (frame.copy (), bbox_tl, bbox_br, (255, 0, 0), 5)
+                #frame = cv2.cvtColor(frame, cv2.COLOR_YCR_CB2HSV)
+                #frame  = cv2.cvtColor(frame, cv2.COLOR_YCrCb2RGB)
+                #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+                #bottom point coordinates
+                #x, y = detector.detect (frame)
 
-                    #draw circle on the frame
-                    result = cv2.circle (frame.copy (), (int(x_b), int(y_b)), 5, (120, 150, 190), thickness = -1)
-                    #print(frame.shape)
-                    cv2.waitKey(2)
+                #draw circle on the frame
+                #result = cv2.circle (frame.copy (), (int(x_b), int(y_b)), 5, (120, 150, 190), thickness = -1)
+                #print(frame.shape)
+                #cv2.waitKey(2)
 
-                    cv2.imshow ("frame", result)
-                    #print (x, y)
+                #cv2.imshow ("frame", result)
+                #print (x, y)
 
-                    msg = self._cv_bridge.cv2_to_imgmsg(frame)
-                #  # Publish new image
-                    self.obstacle_img.publish(msg)
-                    basketT_msg = Point(float(x_t), float(y_t), float(0))
-                    basketB_msg = Point(float(x_b), float(y_b), float(0))
-                    self.basket_top.publish(basketT_msg)
-                    self.basket_bottom.publish(basketB_msg)
-                    self.obstacles.publish(tuple([basketB_msg, basketT_msg]))
+                #msg = self._cv_bridge.cv2_to_imgmsg(frame)
+            #  # Publish new image
+                #self.obstacle_img.publish(msg)
+                #basketT_msg = Point(float(x_t), float(y_t), float(0))
+                #basketB_msg = Point(float(x_b), float(y_b), float(0))
+                #self.basket_top.publish(basketT_msg)
+                #self.basket_bottom.publish(basketB_msg)
+                    self.obstacles.publish(tuple(polygon))
 
-                    stages = detector.get_stages ()
+                #stages = detector.get_stages ()
 
-                    for i in range (len(stages)):
-                        cv2.imshow (str (i), stages[i])
+                #for i in range (len(stages)):
+                #    cv2.imshow (str (i), stages[i])
 	
 if __name__ == "__main__":
     rospy.init_node('detectors')
