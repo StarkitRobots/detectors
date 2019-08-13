@@ -1,10 +1,12 @@
 #!/usr/bin/env python
+import sys
+
+sys.path.append("../modules/")
 import cv2
 import numpy as np
 from matplotlib import pyplot as plt
 from detectors import inrange
 import os
-import sys
 from image_processing import to_three
 import rospy
 from sensor_msgs.msg import Image, CompressedImage

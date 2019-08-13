@@ -1,6 +1,6 @@
 <launch>
     <!-- Sprint launch file -->
     <node pkg="detectors" type="detectors.py" name="detectors"  output="screen">
-    <param name="conf_file" value="/home/rhoban/catkin_ws/src/detectors/basket_detector.txt" />
+    <param name="conf_file" value="/home/rhoban/catkin_ws/src/detectors/configs/closest_obstacle.json" />
     </node>
 </launch>
