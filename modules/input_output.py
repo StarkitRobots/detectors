@@ -1,4 +1,5 @@
 import cv2
+from pathlib import Path
 
 def get_available_cameras (upper_bound = 10, lower_bound = 0):
     available = []
@@ -13,7 +14,10 @@ def get_available_cameras (upper_bound = 10, lower_bound = 0):
     
     return available
 
-#read dir
+def folder_files (path):
+    files = sorted (Path (path).glob('*.*'))
+
+    return files
 
 #Incapsulates reading frames from the following types of sources:
 #photo (single image), photos series, video, camera, ROS node (?)
@@ -26,12 +30,6 @@ def get_available_cameras (upper_bound = 10, lower_bound = 0):
 #TODO: semi-automatic source type detection
 #TODO: implementation of reading from all the sources (except for ROS) [later]
 #TODO: output [later]
-
-#"photo series" : self.read_frame_photo (),
-#"video"        : self.read_frame_photo (),
-#"camera"       : self.read_frame_photo (),
-#"ros flex"     : self.read_frame_photo (),
-# }
 
 class Source:
     #type = ""
@@ -52,24 +50,32 @@ class Source:
                 self.path.endswith ("bmp")):
                 self.type = "photo"
 
-            #if (ends with mp4, webm) video
-            #    self.type = "video"
+            elif (self.path.endswith ("webm") or
+                self.path.endswith ("mp4")):
+                self.type = "video"
 
-            #if (ends with /)         photo_series
-            #    self.type = "photo series"
+            elif (self.path.endswith ("/")):
+                self.type = "photo series"
 
-            #if (is number)           camera
-            #    self.type = "camera"
+            elif (self.path.isnumeric () == True):
+                self.type = "camera"
 
-            #    num = str (path_)
-            #    if (num < 0):
-            #        cameras = get_available_cameras ()
+                num = str (path_)
 
-            #        if (num == -1):
-            #            cam_num = min (cameras)
+                if (num < 0):
+                    cameras = get_available_cameras ()
 
-            #        if (num == -1):
-            #            cam_num = min (cameras)
+                    if (num == -1):
+                        self.cam_num = min (cameras)
+
+                    else:
+                        self.cam_num = max (cameras)
+
+                else:
+                    self.cam_num = num                    
+
+            else:
+                self.type = "ros flex"
 
         else:
             self.type = type_
@@ -90,9 +96,29 @@ class Source:
 
     def init_source (self):
         self.sources = {}
-        self.sources.update ({"photo" : (self.init_photo, self.get_frame_photo)})
+
+        self.sources.update ({"photo"        : (self.init_photo,        self.get_frame_photo)})
+        self.sources.update ({"photo series" : (self.init_photo_series, self.get_frame_photo_series)})
+        #self.sources.update ({"video"        : (self.init_video,        self.get_frame_video)})
+        #self.sources.update ({"camera"       : (self.init_camera,       self.get_frame_camera)})
+        #self.sources.update ({"ros flex"     : (self.init_ros_flex,     self.get_frame_ros_flex)})
 
         self.sources [self.type] [0] ()
+
+    def init_photo (self):
+        self.img = cv2.imread (self.path)
+
+    def init_photo_series (self):
+        self.file_num = 0
+        self.files = folder_files (self.path)
+
+        print (len (self.files), " files")
+
+    def init_video (self):
+        self.img = cv2.imread (self.path)
+
+    def init_photo (self):
+        self.img = cv2.imread (self.path)
 
     def init_photo (self):
         self.img = cv2.imread (self.path)
@@ -105,6 +131,26 @@ class Source:
             return self.sample_image
 
         return self.sources [self.type] [1] ()
+
+    def get_frame_photo (self):
+        return self.img.copy ()
+        
+    def get_frame_photo_series (self):
+        filename = str (self.files [self.file_num])
+
+        #print (filename)
+
+        img = cv2.imread (filename)
+
+        self.file_num += 1
+
+        return img
+
+    def get_frame_photo (self):
+        return self.img.copy ()
+
+    def get_frame_photo (self):
+        return self.img.copy ()
 
     def get_frame_photo (self):
         return self.img.copy ()
