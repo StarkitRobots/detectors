@@ -24,7 +24,8 @@ import detectors
 def nothing (x):
     pass
 
-source = Source ("/Users/elijah/Downloads/Q20cCyUTBeY.jpg")
+#source = Source ("/Users/elijah/Downloads/Q20cCyUTBeY.jpg")
+source = Source ("/Users/elijah/Dropbox/Programming/detectors/images/two_objects.jpg")
 
 low_th  = (57, 150, 110)
 high_th = (67, 160, 120)
@@ -44,11 +45,13 @@ cv2.createTrackbar ("h3", "Colorbars", 255, 255, nothing)
 
 while (True):
     #frame = CvBridge().imgmsg_to_cv2(image_msg, desired_encoding="passthrough")
-    #frame = cv2.cvtColor(frame, cv2.COLOR_YCrCb2RGB)
-    #frame = cv2.cvtColor(frame, cv2.COLOR_BGR2HSV)
+    
     #print(frame.shape)
     
     frame = source.get_frame ()
+
+    frame = cv2.cvtColor (frame, cv2.COLOR_YCrCb2RGB)
+    frame = cv2.cvtColor (frame, cv2.COLOR_BGR2HSV)
 
     l1 = cv2.getTrackbarPos ("l1", "Colorbars")
     h1 = cv2.getTrackbarPos ("h1", "Colorbars")

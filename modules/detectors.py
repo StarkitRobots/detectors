@@ -10,6 +10,9 @@ import numpy as np
 #TODO: Implement simultaneous stages displaying in single window
 #TODO: Document the logics behind the project architecture, filters creation
 #TODO: Fix issues arised because of the folder reorganization
+#TODO: In HSV H represents circular matter. There should be an option to
+#      set [240 -- 5] range, for instance
+#Integrate ilastic - tool for segmentation in the detection process
 
 #TODO/REFACTOR
 #Move parameters parsing into the filters constructors from Detector constructor
@@ -399,7 +402,7 @@ class Detector:
 
                     type = labels [i]
 
-                    rect_marked = cv2.circle (prev_img, (x, y), 5, (10 + type * 50, 50 + type * 150, 190 + type * 210), thickness = -1)
+                    rect_marked = cv2.circle (prev_img, (x, y), 5, (10 + type * 50, 150 - type * 90, 190 + type * 140), thickness = -1)
 
                 stages_picts.append (rect_marked)
 

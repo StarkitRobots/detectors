@@ -6,46 +6,20 @@ import sys
 sys.path.append("/Users/elijah/Dropbox/Programming/detectors/modules/")
 
 import detectors
-
-#TODO: implement class, incapsulating input source
-#possible inputs: video, camera, photo
-
-CAMERA = 0
-VIDEO  = 1
-PHOTO  = 2
+import input_output
 
 video_path = ""
 video_file = ""
 
 photo_path = "/Users/elijah/Dropbox/Programming/detectors/images/"
-photo_file = "two_objects_1.jpg"
-
-output_path = "/Users/elijah/Dropbox/Programming/RoboCup/nao_cv/geometrical/chessboard_images/"
+photo_file = "two_objects.jpg"
 
 def main ():
-    INPUT_SOURCE = PHOTO
-
-    #cam_num = max (get_available_cameras ())
-
-    #cam = cv2.VideoCapture (cam_num)
-
-    #if (INPUT_SOURCE != CAMERA):
-    #    cam.release ()
-
-    #if (INPUT_SOURCE == VIDEO):
-    #    cam = cv2.VideoCapture (video_path + video_file)
-
-    if (INPUT_SOURCE == PHOTO):
-        img = cv2.imread (photo_path + photo_file)
-
+    img_source = input_output.Source (photo_path + photo_file)
     detector = detectors.Detector ('/Users/elijah/Dropbox/Programming/detectors/configs/closest_obstacle.json')
     
     while (True):
-        #if (INPUT_SOURCE == CAMERA or INPUT_SOURCE == VIDEO):
-        #    ret, frame_ = cam.read ()
-
-        if (INPUT_SOURCE == PHOTO):
-            frame_ = img.copy ()
+        frame_ = img_source.get_frame ()
 
         #frame = cv2.cvtColor (frame_, cv2.COLOR_RGB2BGR)
         frame = frame_
@@ -54,41 +28,26 @@ def main ():
 
         (obstacle_pixels, labels), _ = detector.detect (frame, "obstacle detector")
 
-        #print ("keke")
-        #print (labels)
-
         #draw obstacles on the frame
         result = frame.copy ()
 
         #os.system ("clear")
         #print (obstacle_pixels)
 
-        #for pixel in obstacle_pixels:
-        for i in range (len (obstacle_pixels)):
-        #    #x, y, type = pixel
+        #for i in range (len (obstacle_pixels)):
+        #    x = i
+        #    y = obstacle_pixels [i]
 
-            x = i
-            y = obstacle_pixels [i]
+        #    type = labels [i]
 
-            type = labels [i]
-
-            #if (y == 0):
-            result = cv2.circle (result, (x, y), 5, (120 + type * 50, 150 + type * 150, 190 + type * 210), thickness = -1)
-
-            #else:
-            #    result = cv2.circle (result, (x, frame.shape [0] - y), 5,
-            #        (120 + type * 50, 150 + type * 150, 190 + type * 210), thickness = -1)
+        #    result = cv2.circle (result, (x, y), 5, (12 + type * 150, 250 - type * 120, 190 + type * 110), thickness = -1)
 
         stages = detector.get_stages_picts ("obstacle detector")
 	
         for i in range (len (stages)):
             cv2.imshow (str (i), stages [i])
-
-        #processing_stages = detector.stages ()
-	
-	#resultant_frame = form_images (processing_stages)
         
-        cv2.imshow ("frame", result)
+        #cv2.imshow ("frame", result)
 
         time.sleep (0.02)
        
@@ -96,8 +55,6 @@ def main ():
         
         if (keyb == ord('q')):
             break
-
-    #cam.release ()
 
     cv2.destroyAllWindows()
 

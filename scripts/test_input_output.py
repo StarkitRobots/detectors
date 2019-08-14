@@ -16,7 +16,7 @@ def main ():
     series_source = Source ("/Users/elijah/Dropbox/Programming/detectors/images/2019_08_11_08h11m07s/", "", True)
 
     while (True):
-        frame    = series_source.get_frame      ()
+        frame = series_source.get_frame ()
         
         (x, y), success  = detector.detect (frame, "ball detector")
 

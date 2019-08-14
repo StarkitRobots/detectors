@@ -15,7 +15,11 @@ def get_available_cameras (upper_bound = 10, lower_bound = 0):
     return available
 
 def folder_files (path):
-    files = sorted (Path (path).glob('*.*'))
+    files_png = sorted (Path (path).glob('*.png'))
+    files_jpg = sorted (Path (path).glob('*.jpg'))
+    files_bmp = sorted (Path (path).glob('*.bmp'))
+
+    files = files_png + files_jpg + files_bmp
 
     return files
 
@@ -112,7 +116,9 @@ class Source:
         self.file_num = 0
         self.files = folder_files (self.path)
 
-        print (len (self.files), " files")
+        #print (self.files)
+
+        #print (len (self.files), " files")
 
     def init_video (self):
         self.img = cv2.imread (self.path)
@@ -143,6 +149,9 @@ class Source:
         img = cv2.imread (filename)
 
         self.file_num += 1
+
+        if (self.file_num == len (self.files)):
+            self.file_num = 0
 
         return img
 
