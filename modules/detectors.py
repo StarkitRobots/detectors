@@ -211,8 +211,8 @@ class find_obstacles_distances (Filter):
             mask = self.cc_filter.apply (mask)
             self.obstacles_stages.update ({"1" : mask})
 
-            op_ker = 12
-            cl_ker = 12
+            op_ker = 3
+            cl_ker = 3
 
             morph = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((op_ker, op_ker),np.uint8))
             self.obstacles_stages.update ({"2" : mask})
@@ -233,7 +233,7 @@ class find_obstacles_distances (Filter):
 
         for i in range (len (result)):
             if (result [i] != -2):
-                result [i] = sh [0] - temp_result [i]
+                result [i] = sh [0] - result [i]
                 #temp_result [i] = temp_result [i]
 
 
