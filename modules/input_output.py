@@ -54,8 +54,9 @@ class Source:
                 self.path.endswith ("bmp")):
                 self.type = "photo"
 
-            elif (self.path.endswith ("webm") or
-                self.path.endswith ("mp4")):
+            elif (self.path.endswith (".webm") or
+                self.path.endswith (".mp4") or
+                self.path.endswith (".avi")):
                 self.type = "video"
 
             elif (self.path.endswith ("/")):
@@ -103,7 +104,7 @@ class Source:
 
         self.sources.update ({"photo"        : (self.init_photo,        self.get_frame_photo)})
         self.sources.update ({"photo series" : (self.init_photo_series, self.get_frame_photo_series)})
-        #self.sources.update ({"video"        : (self.init_video,        self.get_frame_video)})
+        self.sources.update ({"video"        : (self.init_video,        self.get_frame_video)})
         #self.sources.update ({"camera"       : (self.init_camera,       self.get_frame_camera)})
         #self.sources.update ({"ros flex"     : (self.init_ros_flex,     self.get_frame_ros_flex)})
 
@@ -121,13 +122,13 @@ class Source:
         #print (len (self.files), " files")
 
     def init_video (self):
-        self.img = cv2.imread (self.path)
+        self.video = cv2.VideoCapture (self.path)
 
-    def init_photo (self):
-        self.img = cv2.imread (self.path)
+    #def init_photo (self):
+    #    self.img = cv2.imread (self.path)
 
-    def init_photo (self):
-        self.img = cv2.imread (self.path)
+    #def init_photo (self):
+    #    self.img = cv2.imread (self.path)
 
     def get_frame (self):
         if (self.sample_image_obtained          == True and
@@ -155,8 +156,16 @@ class Source:
 
         return img
 
-    def get_frame_photo (self):
-        return self.img.copy ()
+    def get_frame_video (self):
+        reading_success, frame = self.video.read ()
+
+        if (reading_success == False):
+            self.video.release ()
+            self.init_video ()
+
+            reading_success, frame = self.video.read ()
+
+        return frame
 
     def get_frame_photo (self):
         return self.img.copy ()

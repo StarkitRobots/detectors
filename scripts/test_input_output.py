@@ -13,20 +13,31 @@ import tracker
 def main ():    
     detector = detectors.Detector ('/Users/elijah/Dropbox/Programming/detectors/configs/basketball.json')
     
-    series_source = Source ("/Users/elijah/Dropbox/Programming/detectors/images/2019_08_11_08h11m07s/", "", True)
+    #source = Source ("/Users/elijah/Dropbox/Programming/detectors/images/2019_08_11_08h11m07s/")
+    source  = Source ("/Users/elijah/Dropbox/Programming/detectors/data/output.avi")
+
+    #fourcc = cv2.VideoWriter_fourcc(*'XVID')
+    #out = cv2.VideoWriter('output.avi',fourcc, 20.0, (640,480))
+    a = 0
 
     while (True):
-        frame = series_source.get_frame ()
+        frame = source.get_frame ()
         
+        #out.write(frame)
+        #print (a)
+        #a += 1
+        #if (a > 49):
+        #    break
+
         (x, y), success  = detector.detect (frame, "ball detector")
 
-        result = frame.copy ()
+        #result = frame.copy ()
 
         #draw circle on the frame
         if (success == True):
-            #print ("detected")
+            print ("detected")
             
-            result = cv2.circle (result, (x, y), 9, (120, 15, 190), thickness = -1)
+            #result = cv2.circle (result, (x, y), 9, (120, 15, 190), thickness = -1)
             
         else:
             print ("not detected")
@@ -38,7 +49,7 @@ def main ():
 
 	#resultant_frame = form_images (processing_stages)
         
-        cv2.imshow ("frame", result)
+        #cv2.imshow ("frame", result)
 
         time.sleep (0.02)
 
@@ -47,7 +58,9 @@ def main ():
         if (keyb == ord('q')):
             break
 
-    cam.release ()
+    out.release ()
+
+    #cam.release ()
 
     cv2.destroyAllWindows()
 
