@@ -14,7 +14,8 @@ def main ():
     detector = detectors.Detector ('/Users/elijah/Dropbox/Programming/detectors/configs/basketball.json')
     
     #source = Source ("/Users/elijah/Dropbox/Programming/detectors/images/2019_08_11_08h11m07s/")
-    source  = Source ("/Users/elijah/Dropbox/Programming/detectors/data/output.avi")
+    #source  = Source ("/Users/elijah/Dropbox/Programming/detectors/data/output.avi")
+    source  = Source ("-1")
 
     #fourcc = cv2.VideoWriter_fourcc(*'XVID')
     #out = cv2.VideoWriter('output.avi',fourcc, 20.0, (640,480))

@@ -62,10 +62,11 @@ class Source:
             elif (self.path.endswith ("/")):
                 self.type = "photo series"
 
-            elif (self.path.isnumeric () == True):
+            elif (self.path.isnumeric      () == True or
+                  self.path [1:].isnumeric () == True):
                 self.type = "camera"
 
-                num = str (path_)
+                num = int (self.path)
 
                 if (num < 0):
                     cameras = get_available_cameras ()
@@ -105,7 +106,7 @@ class Source:
         self.sources.update ({"photo"        : (self.init_photo,        self.get_frame_photo)})
         self.sources.update ({"photo series" : (self.init_photo_series, self.get_frame_photo_series)})
         self.sources.update ({"video"        : (self.init_video,        self.get_frame_video)})
-        #self.sources.update ({"camera"       : (self.init_camera,       self.get_frame_camera)})
+        self.sources.update ({"camera"       : (self.init_camera,       self.get_frame_camera)})
         #self.sources.update ({"ros flex"     : (self.init_ros_flex,     self.get_frame_ros_flex)})
 
         self.sources [self.type] [0] ()
@@ -124,8 +125,8 @@ class Source:
     def init_video (self):
         self.video = cv2.VideoCapture (self.path)
 
-    #def init_photo (self):
-    #    self.img = cv2.imread (self.path)
+    def init_camera (self):
+        self.camera = cv2.VideoCapture (self.cam_num)
 
     #def init_photo (self):
     #    self.img = cv2.imread (self.path)
@@ -167,8 +168,10 @@ class Source:
 
         return frame
 
-    def get_frame_photo (self):
-        return self.img.copy ()
+    def get_frame_camera (self):
+        reading_success, frame = self.camera.read ()
+
+        return frame
 
     def get_frame_photo (self):
         return self.img.copy ()
