@@ -13,6 +13,7 @@ import numpy as np
 #TODO: In HSV H represents circular matter. There should be an option to
 #      set [240 -- 5] range, for instance
 #Integrate ilastic - tool for segmentation in the detection process
+#Filter returning lowest point of the connected component
 
 #TODO/REFACTOR
 #Move parameters parsing into the filters constructors from Detector constructor
