@@ -24,6 +24,8 @@ import numpy as np
 #Move image processing (if any) from detectors.py to image_processing.py
 #Adopt tests to new Detector usage (with multiple objects)
 #Refactor Detector, particularly multi-object part
+#Move particular cases of get_stages_steps into the filters
+#    for the generalization
 
 #TODO/FUTURE
 #Make up a way to plug filters in another filters.
@@ -133,6 +135,9 @@ class max_area_cc_bbox (Filter):
         result, success_curr = image_processing.find_max_bounding_box (img)
 
         self.success.append (success_curr)
+
+        #print ("max area cc bbox", result)
+
         return result
 
 #returns bottom point of the bbox, middle by x axis
@@ -210,19 +215,19 @@ class find_obstacles_distances (Filter):
 
             self.inrange_filter.set_ths (range_ [0], range_ [1])
             mask = self.inrange_filter.apply (img)
-            self.obstacles_stages.update ({"0" : mask})
+            self.obstacles_stages.update ({"0" : image_processing.to_three (mask)})
 
             mask = self.cc_filter.apply (mask)
-            self.obstacles_stages.update ({"1" : mask})
+            self.obstacles_stages.update ({"1" : image_processing.to_three (mask)})
 
             op_ker = 3
             cl_ker = 3
 
             morph = cv2.morphologyEx(mask, cv2.MORPH_OPEN, np.ones((op_ker, op_ker),np.uint8))
-            self.obstacles_stages.update ({"2" : mask})
+            self.obstacles_stages.update ({"2" : image_processing.to_three (mask)})
 
             morph = cv2.morphologyEx(morph, cv2.MORPH_CLOSE, np.ones((cl_ker,cl_ker),np.uint8))
-            self.obstacles_stages.update ({"3" : mask})
+            self.obstacles_stages.update ({"3" : image_processing.to_three (mask)})
 
             temp_result = self._get_obstacles_dists (morph)
 
@@ -284,7 +289,11 @@ class Detector:
 
         return cc_filter
 
-    def __init__(self, detector_filename):
+    def __init__(self, detector_filename = "-111"):
+        if (detector_filename == "-111"):
+            self.detectors.update ({"a" : []})
+            return
+
         with open (detector_filename) as f:
             data = json.load(f)
         competition = data["competition"]
@@ -419,7 +428,9 @@ class Detector:
         success = True
 
         for filter, name in self.detectors [detector_name]:
-            curr_state = filter.apply (self.stages [detector_name] [-1])
+            previous_step = self.stages [detector_name] [-1]
+
+            curr_state = filter.apply (previous_step)
             self.stages [detector_name].append (curr_state)
 
             if (len (filter.success) != 0 and filter.success [-1] == False):

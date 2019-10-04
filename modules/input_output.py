@@ -1,5 +1,7 @@
 import cv2
 from pathlib import Path
+import math
+import numpy as np
 
 def get_available_cameras (upper_bound = 10, lower_bound = 0):
     available = []
@@ -166,14 +168,64 @@ class Source:
 
             reading_success, frame = self.video.read ()
 
-        return frame
+        return reading_success, frame
 
     def get_frame_camera (self):
         reading_success, frame = self.camera.read ()
 
-        return frame
+        return reading_success, frame
 
     def get_frame_photo (self):
         return self.img.copy ()
 
 #output (stream to video file)
+
+#generalize to the desired a by b cells grid (?)
+#generalize to the desired acpect ratio (?)
+
+def form_grid (images_, window_x_sz = -1, one_img_x_sz = -1, square_like = True):
+    images = []
+
+    sh = images_ [0].shape
+    scaling = 4
+
+    szx = int (sh [0] / scaling)
+    szy = int (sh [1] / scaling)
+
+    for img_ in images_:
+        img = cv2.resize (img_, (szx, szy))
+        images.append (img)
+
+    if (square_like == True):
+        images_num = len (images)
+        row_len = math.ceil (math.sqrt (images_num))
+        print ("row len", row_len)
+
+        #form rows
+        rows = []
+
+        for i in range (row_len):
+            #new_row_ = images [i * row_len : min (i * row_len + row_len, images_num)]]
+
+            print ("len", len (new_row_))
+
+            if (len (new_row_) != row_len):
+                while (len (new_row_) != row_len):
+                    new_row_.append (new_row_ [-1])
+
+            new_row = np.concatenate (tuple (new_row_), axis = 0)
+
+            rows.append (new_row)
+
+        for row in rows:
+            print (row.shape)
+
+        result = np.concatenate (tuple (rows), axis = 1)
+
+    return result
+
+
+
+
+
+

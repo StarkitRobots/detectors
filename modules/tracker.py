@@ -1,6 +1,7 @@
 import math
 import numpy as np
 from scipy import optimize
+import cv2
 
 def detect_circle_params(x_coords, y_coords):
     '''
@@ -199,3 +200,53 @@ class Tracker:
         #print (current_vec, angle_diff, angular_speed)
 
         return predicted_time   
+
+#Storing and processing 2d points on a virtual keyboard
+class Target_handler:
+    positions  = []
+    timestamps = []
+
+    def __init__(self, window_sz):
+        self.window_sz = window_sz_
+    
+    def add_measurement (self, position, timestamp):
+        self.positions.append  (position)
+        self.timestamps.append (timestamp)
+
+    def pressed (self):
+        if (len (positions) < self.window_sz):
+            return False, (0, 0)
+
+        grads = []
+
+        for i in range (0, self.window_sz):
+            grads.append (self.positions [-self.window_sz + i - 1] - self.positions [-self.window_sz + i])
+
+        if (grads [0:int (self.window_sz * 2 / 3)].sum () > 0 and
+            sum (grads [int (self.window_sz * 2 / 3):]) < 0):
+            max_x = 0
+            max_y = 0
+
+            for pos in self.positions:
+                if (pos [1] > max_y):
+                    (max_x, max_y) = pos 
+
+            return True, (max_x, max_y)
+
+        return False, (0, 0)
+
+    def draw_y_by_t (self):
+        width  = 700
+        height = 700
+
+        canvas = np.array ((300, 300), np.uint8)
+
+        i = 0
+        for pos in positions [-self.window_sz:]:
+            x = int (width * (i + 1) / (self.window_sz + 1))
+            y = pos [1]
+
+            cv2.Circle (canvas, pos, (120, 150, 200), 6)
+
+        return canvas
+

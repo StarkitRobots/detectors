@@ -32,10 +32,20 @@ cv2.namedWindow ('Colorbars')
 
 #source = Source ("../images/2019_08_11_08h00m33s/00014.png")
 #source = Source ("../images/00014.png")
-source = Source ("../images/obst_bottom.png")
+#source = Source ("../images/obst_bottom.png")
+source = Source ("1")
 
 #detector = detectors.Detector ('../configs/multiple_objects1.json')
-detector = detectors.Detector ('../configs/closest_obstacle.json')
+#detector = detectors.Detector ('../configs/closest_obstacle.json')
+
+low_th  = (140, 70, 40)
+high_th = (220, 130, 100)
+detector = detectors.Detector ()
+detector.add_filter (detectors.colorspace_to_colorspace ("RGB", "HSV"), "a", "colorspace")
+detector.add_filter (detectors.inrange (low_th, high_th), "a", "inrange")
+detector.add_filter (detectors.filter_connected_components (10), "a", "filter")
+#detector.add_filter (detectors.max_area_cc_bbox (), "a", "bbox extraction")
+#detector.add_filter (detectors.bottom_bbox_point (), "a", "desired point extraction")
 
 cv2.createTrackbar ("l1", "Colorbars",   0, 255, nothing)
 cv2.createTrackbar ("h1", "Colorbars", 255, 255, nothing)
@@ -55,14 +65,26 @@ high_th = (67, 160, 120)
 #cv2.destroyAllWindows()
 
 while (True):    
-    frame_from_source = source.get_frame ()
+    _, frame_from_source = source.get_frame ()
 
     #print ("a")
 
-    detector.detect (frame_from_source, "obstacle detector")
-    stages = detector.get_stages_picts ("obstacle detector")
+    detector.detect (frame_from_source, "a")
+    stages = detector.get_stages_picts ("a")
     #detector.detect (frame_from_source, "ball detector")
     #stages = detector.get_stages_picts ("ball detector")
+
+    l1 = cv2.getTrackbarPos ("l1", "Colorbars")
+    h1 = cv2.getTrackbarPos ("h1", "Colorbars")
+    l2 = cv2.getTrackbarPos ("l2", "Colorbars")
+    h2 = cv2.getTrackbarPos ("h2", "Colorbars")
+    l3 = cv2.getTrackbarPos ("l3", "Colorbars")
+    h3 = cv2.getTrackbarPos ("h3", "Colorbars")
+
+    low_th  = (l1, l2, l3)
+    high_th = (h1, h2, h3)
+
+    detector.detectors ["a"] [1] [0].set_ths (low_th, high_th)
 
     for i in range (len (stages)):
         cv2.imshow (str (i), stages [i])
