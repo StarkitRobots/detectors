@@ -41,10 +41,15 @@ source = Source ("1")
 low_th  = (140, 70, 40)
 high_th = (220, 130, 100)
 detector = detectors.Detector ()
+
 detector.add_filter (detectors.colorspace_to_colorspace ("RGB", "HSV"), "a", "colorspace")
 detector.add_filter (detectors.inrange (low_th, high_th), "a", "inrange")
-detector.add_filter (detectors.filter_connected_components (10), "a", "filter")
-#detector.add_filter (detectors.max_area_cc_bbox (), "a", "bbox extraction")
+
+#detector.add_filter (detectors.filter_connected_components (10), "a", "filter")
+
+detector.add_filter (detectors.leave_max_area_cc (), "a", "max cc extraction")
+detector.add_filter (detectors.bottom_cc_point (), "a", "bottom point extraction")
+
 #detector.add_filter (detectors.bottom_bbox_point (), "a", "desired point extraction")
 
 cv2.createTrackbar ("l1", "Colorbars",   0, 255, nothing)
@@ -86,7 +91,7 @@ while (True):
 
     detector.detectors ["a"] [1] [0].set_ths (low_th, high_th)
 
-    for i in range (len (stages)):
+    for i in range (len (stages) - 1):
         cv2.imshow (str (i), stages [i])
 
     cv2.waitKey(2)

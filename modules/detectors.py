@@ -140,16 +140,52 @@ class max_area_cc_bbox (Filter):
 
         return result
 
+#leave maximal area connected component
+class leave_max_area_cc (Filter):
+    def __init__ (self):
+        Filter.__init__ (self, "leave_max_area_cc")
+
+    def apply (self, img):
+        result, success_curr = image_processing.leave_max_connected_component (img)
+
+        self.success.append (success_curr)
+
+        return result
+
 #returns bottom point of the bbox, middle by x axis
 class bottom_bbox_point (Filter):
     def __init__ (self):
-        Filter.__init__ (self, "bottob_bbox_point")
+        Filter.__init__ (self, "bottom_bbox_point")
 
     def apply (self, img):
         tl, br = img
 
         x = int ((tl [0] + br [0]) / 2)
         y = br [1]
+
+        return (x, y)
+
+#returns bottom point of the cc
+class bottom_cc_point (Filter):
+    def __init__ (self):
+        Filter.__init__ (self, "bottom_cc_point")
+
+    def apply (self, img):
+        contours, hierarchy = cv2.findContours (img, cv2.RETR_EXTERNAL, cv2.CHAIN_APPROX_SIMPLE)
+
+        cont = []
+
+        for c in contours [0]:
+            cont.append (c[0])
+
+        x = 5
+        y = 5
+
+        if (len (cont) != 0):
+            sor = sorted (cont, key=lambda con: con [1])
+
+            x = sor [-1] [0]
+            y = sor [-1] [1]
 
         return (x, y)
 

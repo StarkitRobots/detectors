@@ -120,6 +120,31 @@ def find_max_bounding_box (mask):
 
     return ((left, top), (left + width, top + height)), success
 
+def leave_max_connected_component (mask):
+    result = np.zeros_like (mask)
+    output = cv2.connectedComponentsWithStats (mask, 8, cv2.CV_32S)
+    labels_num = output      [0]
+    labels     = output      [1]
+    stats      = output      [2]
+    sz         = stats.shape [0]
+    
+    max_area  = 0
+    max_label = 0
+    
+    success = True
+
+    if (sz == 1):
+        success = False
+
+    for label_num in range (1, sz):
+        if (stats [label_num, cv2.CC_STAT_AREA] > max_area):
+            max_area = stats [label_num, cv2.CC_STAT_AREA]
+            max_label = label_num
+
+    result [np.where (labels == max_label)] = 255
+
+    return result, success
+
 #Connected components filtering
 #Supports basic conditions, height/width, area, density (area by w * h ratio)
 
